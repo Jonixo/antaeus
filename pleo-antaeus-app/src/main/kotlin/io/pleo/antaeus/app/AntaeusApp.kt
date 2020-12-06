@@ -7,6 +7,7 @@
 
 package io.pleo.antaeus.app
 
+import getCurrencyExhangeProvider
 import getPaymentProvider
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
@@ -57,13 +58,18 @@ fun main() {
 
     // Get third parties
     val paymentProvider = getPaymentProvider()
+    val currencyExchangeProvider = getCurrencyExhangeProvider()
 
     // Create core services
     val invoiceService = InvoiceService(invoiceDal = invoiceDal)
     val customerService = CustomerService(customerDal = customerDal)
 
+
     // This is _your_ billing service to be included where you see fit
-    val billingService = BillingService(paymentProvider = paymentProvider)
+    val billingService = BillingService(paymentProvider = paymentProvider,
+                                        customerService = customerService,
+                                        currencyExchangeProvider = currencyExchangeProvider,
+                                        invoiceService = invoiceService)
 
     // Create REST web service
     AntaeusRest(

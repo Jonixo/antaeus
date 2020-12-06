@@ -9,6 +9,7 @@ import io.pleo.antaeus.data.CustomerDal
 import io.pleo.antaeus.models.Customer
 
 class CustomerService(private val customerDal: CustomerDal) {
+
     fun fetchAll(): List<Customer> {
         return customerDal.fetchCustomers()
     }
