@@ -18,7 +18,7 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class AntaeusDal(private val db: Database) {
+class InvoiceDal(private val db: Database) {
     fun fetchInvoice(id: Int): Invoice? {
         // transaction(db) runs the internal query as a new database transaction.
         return transaction(db) {
@@ -53,31 +53,4 @@ class AntaeusDal(private val db: Database) {
         return fetchInvoice(id)
     }
 
-    fun fetchCustomer(id: Int): Customer? {
-        return transaction(db) {
-            CustomerTable
-                .select { CustomerTable.id.eq(id) }
-                .firstOrNull()
-                ?.toCustomer()
-        }
-    }
-
-    fun fetchCustomers(): List<Customer> {
-        return transaction(db) {
-            CustomerTable
-                .selectAll()
-                .map { it.toCustomer() }
-        }
-    }
-
-    fun createCustomer(currency: Currency): Customer? {
-        val id = transaction(db) {
-            // Insert the customer and return its new id.
-            CustomerTable.insert {
-                it[this.currency] = currency.toString()
-            } get CustomerTable.id
-        }
-
-        return fetchCustomer(id)
-    }
 }
