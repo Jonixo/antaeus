@@ -9,6 +9,7 @@ package io.pleo.antaeus.app
 
 import getCurrencyExhangeProvider
 import getPaymentProvider
+import io.pleo.antaeus.core.scheduler.InvoiceJobScheduler
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
@@ -73,6 +74,10 @@ fun main() {
                                         currencyExchangeProvider = currencyExchangeProvider,
                                         invoiceService = invoiceService,
                                         notificationService = notificationService)
+
+
+    val invoiceScheduler = InvoiceJobScheduler(billingService=billingService)
+    invoiceScheduler.scheduleJob()
 
     // Create REST web service
     AntaeusRest(
