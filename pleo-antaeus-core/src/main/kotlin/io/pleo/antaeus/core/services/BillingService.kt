@@ -22,26 +22,20 @@ class BillingService(
 
     fun paymentTask () {
         logger.info { "Starting billing task..." }
-        val successList :  List<Invoice> = emptyList()
-        val failureList :  List<Invoice> = emptyList()
 
         val pending = invoiceService.fetchByStatus(InvoiceStatus.PENDING)
         logger.info {"Number of pending invoices: ${pending.size}"}
 
         for (invoice in pending){
             if(requestPayment(invoiceId = invoice.id))
-                successList.plus(invoice)
+                notificationService.notifyCustomersAboutSuccess(invoice)
             else
-                failureList.plus(invoice)
+                notificationService.notifyCustomersAboutFailure(invoice)
         }
 
-        logger.info { "Billing executed: paid:${successList.size}, failed:${failureList.size}\"" }
+        logger.info { "Billing executed..." }
 
-        logger.info { "Forwarding success list to notification service."}
-        notificationService.notifyCustomersAboutSuccess(failureList)
 
-        logger.info { "Forwarding failure list to notification service."}
-        notificationService.notifyCustomersAboutFailure(failureList)
 
     }
 
