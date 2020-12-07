@@ -16,7 +16,8 @@ class BillingService(
     private val paymentProvider: PaymentProvider,
     private val invoiceService: InvoiceService,
     private val customerService: CustomerService,
-    private val currencyExchangeProvider: CurrencyExchangeProvider
+    private val currencyExchangeProvider: CurrencyExchangeProvider,
+    private val notificationService: NotificationService
 ) {
 
     fun paymentTask () {
@@ -35,6 +36,13 @@ class BillingService(
         }
 
         logger.info { "Billing executed: paid:${successList.size}, failed:${failureList.size}\"" }
+
+        logger.info { "Forwarding success list to notification service."}
+        notificationService.notifyCustomersAboutSuccess(failureList)
+
+        logger.info { "Forwarding failure list to notification service."}
+        notificationService.notifyCustomersAboutFailure(failureList)
+
     }
 
     fun requestPayment(invoiceId: Int): Boolean {
