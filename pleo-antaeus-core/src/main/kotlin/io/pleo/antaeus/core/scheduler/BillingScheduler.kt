@@ -16,7 +16,7 @@ class InvoiceJob : Job {
         val dataMap = context.jobDetail.jobDataMap
         val billingService:BillingService = dataMap["billingService"] as BillingService
 
-        billingService.paymentTask()
+        billingService.processPendingInvoices()
 
     }
 }

@@ -19,7 +19,7 @@ class InvoiceService(private val invoiceDal: InvoiceDal) {
         return invoiceDal.fetchInvoice(id) ?: throw InvoiceNotFoundException(id)
     }
 
-    fun fetchByStatus(status: InvoiceStatus): List<Invoice> {
+    fun fetchInvoicesByStatus(status: InvoiceStatus): List<Invoice> {
         return invoiceDal.fetchInvoicesByStatus(status)
     }
 

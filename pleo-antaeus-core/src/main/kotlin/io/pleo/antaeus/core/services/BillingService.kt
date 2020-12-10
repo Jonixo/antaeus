@@ -20,13 +20,13 @@ class BillingService(
     private val notificationService: NotificationService
 ) {
 
-    fun paymentTask () {
+    fun processPendingInvoices () {
         logger.info { "Starting billing task..." }
 
-        val pending = invoiceService.fetchByStatus(InvoiceStatus.PENDING)
-        logger.info {"Number of pending invoices: ${pending.size}"}
+        val pendingInvoices = invoiceService.fetchInvoicesByStatus(InvoiceStatus.PENDING)
+        logger.info {"Number of pending invoices: ${pendingInvoices.size}"}
 
-        for (invoice in pending){
+        for (invoice in pendingInvoices){
             if(requestPayment(invoiceId = invoice.id))
                 notificationService.notifyCustomersAboutSuccess(invoice)
             else
@@ -42,7 +42,7 @@ class BillingService(
     fun requestPayment(invoiceId: Int): Boolean {
         return try {
             val invoice = invoiceService.fetch(invoiceId)
-            if (invoice.status == InvoiceStatus.PAID) { true }
+            if (invoice.status == InvoiceStatus.PAID || invoice.status == InvoiceStatus.FAILED ) { true }
             else {
                 val paymentOutcome = tryPaymentRequest(invoice)
                 if (paymentOutcome) {
@@ -110,12 +110,12 @@ class BillingService(
     }
 
     private fun retryExchangeCurrency(invoice: Invoice, numOfRetry: Int = 0): Invoice? {
-        TimeUnit.SECONDS.sleep(1L)
+        TimeUnit.SECONDS.sleep(5L)
         return exchangeCurrency(invoice, numOfRetry + 1)
     }
 
     private fun retryPaymentRequest(invoice: Invoice, numOfRetry: Int = 0): Boolean {
-        TimeUnit.SECONDS.sleep(1L)
+        TimeUnit.SECONDS.sleep(5L)
         return tryPaymentRequest(invoice, numOfRetry + 1)
     }
 

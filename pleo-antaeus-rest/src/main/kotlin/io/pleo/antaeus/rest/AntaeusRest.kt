@@ -66,6 +66,18 @@ class AntaeusRest(
                         get(":id") {
                             it.json(invoiceService.fetch(it.pathParam("id").toInt()))
                         }
+
+                        path("process") {
+
+                            path("pending") {
+
+                                // URL: /rest/v1/invoices/process/pending
+                                post {
+                                    billingService.processPendingInvoices()
+                                }
+
+                            }
+                        }
                     }
 
                     path("customers") {
@@ -80,13 +92,7 @@ class AntaeusRest(
                         }
                     }
 
-                    path("payment") {
-                        // URL: /rest/v1/payment
-                        post {
-                            billingService.paymentTask()
-                        }
 
-                    }
                 }
             }
         }

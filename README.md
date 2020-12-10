@@ -4,22 +4,108 @@ Antaeus (/ænˈtiːəs/), in Greek mythology, a giant of Libya, the son of the s
 
 Welcome to our challenge.
 
-## The challenge
+## Architecture Changes
 
-As most "Software as a Service" (SaaS) companies, Pleo needs to charge a subscription fee every month. Our database contains a few invoices for the different markets in which we operate. Your task is to build the logic that will schedule payment of those invoices on the first of the month. While this may seem simple, there is space for some decisions to be taken and you will be expected to justify them.
+- `AntauesDAL` should be divided into two, `InvoiceDAL` and `CustomerDAL`.
+- Add `FAILED` invoice status to model.
+- Implemented Quartz Scheduler for cron job.
+- Added option to trigger invoice processing by POST request.
+- Added mocked Notification Service and Currency Exchange Provider.
 
-## Instructions
+## Services
 
-Fork this repo with your solution. Ideally, we'd like to see your progression through commits, and don't forget to update the README.md to explain your thought process.
+### Customer Service
 
-Please let us know how long the challenge takes you. We're not looking for how speedy or lengthy you are. It's just really to give us a clearer idea of what you've produced in the time you decided to take. Feel free to go as big or as small as you want.
+The customer service contains methods to fetch customers. No changes made here.
 
-## Developing
+### Invoice Service
 
-Requirements:
-- \>= Java 11 environment
+The invoice service contains methods to fetch or update invoices. It has been 
+extended to fetch invoices by status and update the invoices. 
 
-Open the project using your favorite text editor. If you are using IntelliJ, you can open the `build.gradle.kts` file and it is gonna setup the project in the IDE for you.
+### Billing Service
+
+The billing service contains methods to process pending invoices. It is the core of Antheus.
+
+### Scheduler
+
+Scheduler uses Quartz cron job to start the process of pending invoices.
+
+### Notification Service
+
+The notification service can send an e-mail or sms message to invoice owner about success
+or failure of the process. It has not been implemented.
+
+### Currency Exchange Provider
+
+The currency exchange provider is an external service. It handles currency exchanges in case of a 
+currency mismatch. It is a mocked service.
+
+### Payment Provider 
+
+The payment provider is an external service. It handles payment requests. It is a mocked service. 
+
+## General Overview of the Process
+
+The process of pending invoices can be triggered by cron job trigger, or a POST request.
+Either way will not change how the process works. In order;
+
+- Billing Service will get all of the `PENDING` invoices from the database in a list.
+- Each invoice will be sent one by one to the payment process.
+- In this process the invoice will be checked if it's `PAID` or `FAILED` already.
+- Then It will be forwarded to the `Payment Provider`.
+- At this point there are 4 possible outcomes;
+  - Payment will be successful, return true.
+  - Customer not found, log the error, return false.
+  - Network error, log the issue, try 4 more times (total of 5) with 5 seconds between each try.
+  - Currency mismatch, log the issue, try exchange.
+    - Exchange successful, update invoice currency to required currency, return updated invoice.
+    - Customer not found, log the error, return null.
+    - Currency not found, log the error, return null.
+    - Network error, log the issue, try 4 more times (total of 5) with 5 seconds between each try.
+- Notify the customer about success or failure of the payment.
+
+This process will regularly happen at the start of any month without any outside trigger due to cron job setup.
+
+## Summary and Shortcomings
+
+This version of Antaeus is really basic, it is still viable, but It needs important improvements 
+to be actually used in real life. 
+
+### Scalability
+
+Antaeus is not currently scalable. Due to the way Antaeus getting and processing pending invoices
+if we run two of them they would do the same query and work through pending invoices one by one at the same time
+and brick the whole process. To fix this issue I would use a service to query the invoices, send 
+invoices to Kafka topic or RabbitMQ queue. Then if we have multiple payment services up, they can 
+pick the next invoice from the queue and process it. Lastly we can use k8s to load balance.
+
+### Database
+
+If the amount of invoices is in hundreds of thousands, I would recommend switching to ElasticSearch.
+Traditional databases are much slower compared to ES and it can be used to save logs.
+
+### User Experience and Realism
+
+Instead of processing invoices at the start of each month, I would change the system, so the payment process 
+will start every day and pay the invoices on their deadline. This would make sure the invoices
+aren't piled up and make sure no invoices left unprocessed before their deadline.
+To improve the user experience, I would check the customer balance 2 days before deadline and
+inform users if their balance lacks funds to pay upcoming invoices.
+
+## Last Thoughts 
+
+It was a much better challenge than solving some hackerrank questions. I never used kotlin before
+and I am so used to using Spring annotations, I forgot Quartz existed. It was hard for me to find quality
+time to spend on this task, so It took me longer then I wanted, sorry about that.
+
+Total time spent;
+- One evening learning Kotlin, Quartz Scheduler and designing the solution.
+- Around 12 hours coding.
+- A couple more hours for README.md + cleaning up.
+
+10/10, I would do another one. 
+Have a nice day!
 
 ### Building
 
